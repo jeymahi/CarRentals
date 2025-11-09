@@ -1,0 +1,102 @@
+.bg{
+    background-repeat: no-repeat;
+    background-image:url('assets/backgroundBG.jpg');
+    background-size: cover;
+    filter:blur(1px);
+    z-index: -2;
+    inset:0;
+    position: fixed;
+}
+.bgoverlay{
+    position: fixed;
+    width: 100%;
+    z-index: -1;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.507);
+}
+.card, .list-card {
+  background: #ffffffb9;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  border-radius: 6px;
+  box-shadow: 8px 8px 14px #2d0000 !important;
+  max-width: 600px;
+}
+
+.header{
+    background-color: rgb(0 0 0 / 75%);
+    box-shadow: 0px -15px 27px rgb(73 73 73) inset;
+}
+
+.fonts{
+    color:whitesmoke;
+    font-weight: 500;
+}
+
+.form-row {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: .75rem;
+}
+
+.form-row label {
+  font-weight: 600;
+  margin-bottom: .25rem;
+}
+
+.form-row input,
+.form-row select {
+  padding: .4rem .5rem;
+}
+
+.actions {
+  margin-top: .5rem;
+}
+
+.actions button {
+  margin-right: .5rem;
+}
+
+.val {
+  color: #c62828;
+  font-size: .75rem;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th, td {
+  border-bottom: 1px solid #eee;
+  padding: .4rem .5rem;
+  text-align: left;
+}
+
+/* popup */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+.hiddenbutton{
+    position: absolute;
+    color: transparent;
+    right: 9px !important;
+    background: transparent;
+}
+.hiddenbutton:hover{  color: transparent;
+    background: transparent;}
+.popup {
+  background: #fff;
+  padding: 1rem 1.5rem;
+  border-radius: 6px;
+  min-width: 280px;
+}
+.popup h3 {
+  margin-top: 0;
+}
