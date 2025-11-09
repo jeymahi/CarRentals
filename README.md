@@ -5,7 +5,7 @@
 - Run `dotnet restore` and `dotnet run`
 - Runs on `https://localhost:7127`
 
-## Frontend (Angular 16)
+## Frontend (Angular 20)
 - Navigate to `CarRentals-UI`
 - Run `npm install` and `ng serve`
 - Runs on `http://localhost:4200`
