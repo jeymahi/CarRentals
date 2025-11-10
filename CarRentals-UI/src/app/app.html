@@ -1,44 +1,44 @@
 <div class="row row header ps-4 fonts">
-   <h3 class="mb-4 pt-3">WhizzDrive Rentals</h3>
+  <h3 class="mb-4 pt-3">WhizzDrive Rentals</h3>
 </div>
 <div class="modal-backdrop fade show" *ngIf="error"></div>
-  <div class="modal fade show d-block" *ngIf="error" tabindex="-1">
-    <div class="modal-dialog">
-      <div class="modal-content border-danger">
-        <div class="modal-header bg-danger text-white">
-          <h5 class="modal-title">Error</h5>
-          <button type="button" class="btn-close" (click)="error = null"></button>
-        </div>
-        <div class="modal-body">
-          {{ error }}
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" (click)="error = null">Close</button>
-        </div>
+<div class="modal fade show d-block" *ngIf="error" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content border-danger">
+      <div class="modal-header bg-danger text-white">
+        <h5 class="modal-title">Error</h5>
+        <button type="button" class="btn-close" (click)="error = null"></button>
+      </div>
+      <div class="modal-body">
+        {{ error }}
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="error = null">Close</button>
       </div>
     </div>
   </div>
-  <div class="modal-backdrop fade show" *ngIf="success"></div>
-  <div class="modal fade show d-block" *ngIf="success" tabindex="-1">
-    <div class="modal-dialog">
-      <div class="modal-content border-success">
-        <div class="modal-header bg-success text-white">
-          <h5 class="modal-title">Message</h5>
-          <button type="button" class="btn-close" (click)="success = null"></button>
-        </div>
-        <div class="modal-body">
-          {{ success }}
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" (click)="success = null">Close</button>
-        </div>
+</div>
+<div class="modal-backdrop fade show" *ngIf="success"></div>
+<div class="modal fade show d-block" *ngIf="success" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content border-success">
+      <div class="modal-header bg-success text-white">
+        <h5 class="modal-title">Message</h5>
+        <button type="button" class="btn-close" (click)="success = null"></button>
+      </div>
+      <div class="modal-body">
+        {{ success }}
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="success = null">Close</button>
       </div>
     </div>
   </div>
+</div>
 
-  
-<div class="container my-4 fonts" >
- 
+
+<div class="container my-4 fonts">
+
   <div class="row">
     <div class="col-md-5 card shadow-sm p-4 mb-4">
       <form (ngSubmit)="submitReservation(resForm)" #resForm="ngForm" novalidate>
@@ -50,7 +50,7 @@
 
           <div class="col-md-6">
             <label class="form-label">Car Type</label>
-            <select class="form-select" [(ngModel)]="carType" name="carType" required>             
+            <select class="form-select" [(ngModel)]="carType" name="carType" required>
               <option [ngValue]="1">Sedan</option>
               <option [ngValue]="2">SUV</option>
               <option [ngValue]="3">Van</option>
@@ -62,8 +62,8 @@
             <input type="datetime-local" class="form-control" [(ngModel)]="start" name="start" required />
           </div>
 
-           <div class="col-md-6">
-            <label class="form-label">To</label> 
+          <div class="col-md-6">
+            <label class="form-label">To</label>
             <input type="datetime-local" class="form-control" [(ngModel)]="end" name="end" required />
           </div>
 
@@ -73,30 +73,31 @@
             <input type="text" class="form-control" [(ngModel)]="apiKey" name="apiKey" required />
           </div>
 
-          <div class="col-12 text-end mt-3">            
-             <button type="button" #loadbtn (click)="loadAll()" class="btn hiddenbutton">
-           |
-            </button>   <button type="submit" class="btn btn-primary me-2">Reserve</button>        
+          <div class="col-12 text-end mt-3">
+            <button type="button" #loadbtn (click)="loadAll()" class="btn hiddenbutton">
+              |
+            </button> <button type="submit" class="btn btn-primary me-2">Reserve</button>
           </div>
         </div>
       </form>
     </div>
 
     <div class="col-md-1"></div>
-    <div class="card shadow-sm p-3 col-md-6">     
-      <div >
+    <div class="card shadow-sm p-3 col-md-6">
+      <div>
         <h4 class="mb-3">Reservations</h4>
-         <button type="button" (click)="loadAll()" class="btn btn-outline-secondary mb-3">
-              Show / refresh reservations
-            </button>
+        <button type="button" (click)="loadAll()" class="btn btn-outline-secondary mb-3">
+          Show / refresh reservations
+        </button>
         <div *ngIf="reservations?.length == 0" class="text-center">No Reservations found</div>
-        <table *ngIf="reservations?.length != 0 " class="table table-striped table-bordered">
+        <table *ngIf="reservations?.length != 0 " class="table table-striped table-bordered" style="font-size: 15px;">
           <thead class="table-dark">
             <tr>
               <th>Customer Name</th>
               <th>Car Type</th>
               <th>Start</th>
               <th>End</th>
+              <th></th>
             </tr>
           </thead>
           <tbody>
@@ -106,11 +107,11 @@
               <td>{{ r.start | date:'short' }}</td>
               <td>{{ r.end | date:'short' }}</td>
               <td>
-        <button class="btn btn-sm btn-danger"
-                (click)="deleteReservation(r.id)">
-          Delete
-        </button>
-      </td>
+
+
+                <img src="assets/deleteicon.png" alt="Delete" width="20" height="20" class="delete-icon" style="cursor: pointer;" title="Delete Reservation"
+                  (click)="deleteReservation(r.id)">
+              </td>
             </tr>
           </tbody>
         </table>
