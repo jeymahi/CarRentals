@@ -30,6 +30,18 @@ export class AppComponent {
    this.loadbtn.nativeElement.click();
   }
 
+  deleteReservation(id: string) {
+    this.carSvc.deleteReservation(id).subscribe({
+      next: () => {
+        // remove from local table
+        this.reservations = this.reservations.filter(r => r.id !== id);
+      },
+      error: (err) => {
+        this.error = err?.error ?? 'Failed to delete reservation';
+      }
+    });
+  }
+
   submitReservation(form: NgForm) {
     if (form.invalid || !this.carType) {
       this.error = 'Please fill all required fields.';

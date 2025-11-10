@@ -1,9 +1,11 @@
 ﻿// Services/ReservationService.cs
 using CarRentals.API.Data;
+using CarRentals.API.Interface;
 using CarRentals.API.Models;
-using CarRentals.API.RateLimiting;
 using CarRentals.API.Security;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Linq;
 using System.Threading;
@@ -11,54 +13,50 @@ using System.Threading.Tasks;
 
 namespace CarRentals.API.Services
 {
-    public class ReservationService
+    public class ReservationService : IReservationService
     {
-        private readonly CarRentalContext _ctx;
+        private readonly CarRentalContext _context;
+        private readonly IMemoryCache _cache;
         private readonly ApiKeyValidator _apiKeyValidator;
-        private readonly RateLimiter _rateLimiter;
-        private readonly SemaphoreSlim _lock = new SemaphoreSlim(1, 1); // multi-thread safety
+        private readonly ILogger<ReservationService> _logger;
+        private readonly SemaphoreSlim _lock = new SemaphoreSlim(1, 1);
+
+        private static string CapacityKey(int carType) => $"capacity:{carType}";
 
         public ReservationService(
-            CarRentalContext ctx,
+            CarRentalContext context,
+            IMemoryCache cache,
             ApiKeyValidator apiKeyValidator,
-            RateLimiter rateLimiter)
+            ILogger<ReservationService> logger)
         {
-            _ctx = ctx;
+            _context = context;
+            _cache = cache;
             _apiKeyValidator = apiKeyValidator;
-            _rateLimiter = rateLimiter;
+            _logger = logger;
         }
 
         public async Task<Reservation> ReserveAsync(ReservationRequest request)
         {
-            // Security
+            _logger.LogInformation("Reservation request received for Customer {CustomerId}, CarType {CarType}", 
+                request.CustomerId, request.CarType);
+
+            // keep API key validation here
             if (!_apiKeyValidator.IsValid(request.ApiKey))
                 throw new UnauthorizedAccessException("Invalid API key!");
 
-            // Rate limit per customer
-            if (!_rateLimiter.Allow($"reserve:{request.CustomerId}"))
-                throw new InvalidOperationException("Rate limit exceeded!");
-
             var end = request.End;
 
-            // Validate inputs
             InputValidator.EnsureCustomer(request.CustomerId);
             InputValidator.EnsureDateRange(request.Start, end);
 
-            await _lock.WaitAsync();             
+            await _lock.WaitAsync();
             try
             {
-                // Get capacity from inmemory DB
-                var capacityEntity = await _ctx.CarInventories
-                    .FirstOrDefaultAsync(c => c.CarType == request.CarType);
-
-                if (capacityEntity == null)
+                var capacity = await GetCapacityAsync(request.CarType);
+                if (capacity <= 0)
                     throw new InvalidOperationException("Capacity not configured!");
 
-                var capacity = capacityEntity.Capacity;
-
-                // check overlap in DB, timestamp-accurate
-                // overlap: newStart < existing.End AND existing.Start < newEnd
-                var overlappingCount = await _ctx.Reservations
+                var overlappingCount = await _context.Reservations
                     .Where(r => r.CarType == request.CarType)
                     .Where(r => request.Start < r.End && r.Start < end)
                     .CountAsync();
@@ -66,7 +64,6 @@ namespace CarRentals.API.Services
                 if (overlappingCount >= capacity)
                     throw new InvalidOperationException("No cars available for that slot!");
 
-                // create and save
                 var reservation = new Reservation
                 {
                     CustomerId = request.CustomerId,
@@ -75,15 +72,56 @@ namespace CarRentals.API.Services
                     End = end
                 };
 
-                _ctx.Reservations.Add(reservation);
-                await _ctx.SaveChangesAsync();
+                _context.Reservations.Add(reservation);
+                await _context.SaveChangesAsync();
 
                 return reservation;
             }
             finally
             {
-                _lock.Release();                  
+                _lock.Release();
             }
+        }
+
+        public async Task<bool> DeleteReservationAsync(Guid id)
+        {
+            await _lock.WaitAsync();
+            try
+            {
+                var entity = await _context.Reservations
+                    .FirstOrDefaultAsync(r => r.Id == id);
+
+                if (entity == null)
+                    return false;
+
+                _context.Reservations.Remove(entity);
+                await _context.SaveChangesAsync();
+                return true;
+            }
+            finally
+            {
+                _lock.Release();
+            }
+        }
+
+        private async Task<int> GetCapacityAsync(CarType carType)
+        {
+            var key = CapacityKey((int)carType);
+
+            if (_cache.TryGetValue<int>(key, out var cached))
+                return cached;
+
+            var capacityEntity = await _context.CarInventories
+                .FirstOrDefaultAsync(c => c.CarType == carType);
+
+            if (capacityEntity == null)
+            {
+                _cache.Set(key, 0, TimeSpan.FromMinutes(1));
+                return 0;
+            }
+
+            _cache.Set(key, capacityEntity.Capacity, TimeSpan.FromMinutes(5));
+            return capacityEntity.Capacity;
         }
     }
 }

@@ -29,7 +29,7 @@ namespace CarRentals.API.Test.Controllers.Test
             var svc = new ReservationService(
                 ctx,
                 new ApiKeyValidator("secret-key-123"),
-                new RateLimiter(10, TimeSpan.FromSeconds(10)));
+                new RateLimitingMiddleware(10, TimeSpan.FromSeconds(10)));
 
             var controller = new ReservationsController(svc);
 

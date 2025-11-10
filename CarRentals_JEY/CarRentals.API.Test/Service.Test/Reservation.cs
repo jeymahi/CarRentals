@@ -34,7 +34,7 @@ namespace CarRentals.API.Test.Service.Test
         private ReservationService BuildService(CarRentalContext ctx)
         {
             var api = new ApiKeyValidator("secret-key-123");
-            var rate = new RateLimiter(50, TimeSpan.FromMinutes(1));
+            var rate = new RateLimitingMiddleware(50, TimeSpan.FromMinutes(1));
             return new ReservationService(ctx, api, rate);
         }
 
@@ -49,8 +49,8 @@ namespace CarRentals.API.Test.Service.Test
                 ApiKey = "secret-key-123",
                 CustomerId = "cust1",
                 CarType = CarType.Sedan,
-                Start = DateTime.Today.AddHours(9).AddMinutes(15),
-                Days = 1
+                Start = DateTime.Today,
+                End = DateTime.Today.AddHours(10).AddMinutes(15)
             };
 
             var res = await svc.ReserveAsync(dto);
@@ -156,7 +156,7 @@ namespace CarRentals.API.Test.Service.Test
         {
             var ctx = await SeedContextAsync("db_rate");
             var api = new ApiKeyValidator("secret-key-123");
-            var rate = new RateLimiter(2, TimeSpan.FromSeconds(30)); // only 2 calls allowed
+            var rate = new RateLimitingMiddleware(2, TimeSpan.FromSeconds(30)); // only 2 calls allowed
             var svc = new ReservationService(ctx, api, rate);
 
             var dto = new ReservationRequest

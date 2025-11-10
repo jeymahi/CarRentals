@@ -1,4 +1,5 @@
-﻿using CarRentals.API.Models;
+﻿using CarRentals.API.Interface;
+using CarRentals.API.Models;
 using CarRentals.API.Services;
 using Microsoft.AspNetCore.Mvc;
 
@@ -8,9 +9,9 @@ namespace CarRentals.API.Controllers
     [Route("api/[controller]")]
     public class ReservationsController : ControllerBase
     {
-        private readonly ReservationService _reservationService;
+        private readonly IReservationService _reservationService;
 
-        public ReservationsController(ReservationService reservationService)
+        public ReservationsController(IReservationService reservationService)
         {
             _reservationService = reservationService;
         }
@@ -43,6 +44,16 @@ namespace CarRentals.API.Controllers
             var list = await System.Threading.Tasks.Task
                 .FromResult(ctx.Reservations);
             return Ok(list);
+        }
+
+        [HttpDelete("{id:guid}")]
+        public async Task<IActionResult> Delete(Guid id)
+        {
+            var ok = await _reservationService.DeleteReservationAsync(id);
+            if (!ok)
+                return NotFound();
+
+            return NoContent();
         }
     }
 }

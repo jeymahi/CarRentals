@@ -34,4 +34,8 @@ export class CarRental {
   getAll(): Observable<Reservation[]> {
     return this.http.get<Reservation[]>(`${this.baseUrl}/all`);
   }
+
+  deleteReservation(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/${id}`);
+  }
 }

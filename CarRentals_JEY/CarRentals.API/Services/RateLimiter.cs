@@ -1,6 +1,6 @@
 ﻿using System.Collections.Concurrent;
 
-namespace CarRentals.API.RateLimiting
+namespace CarRentals.API.Services
 {
     public class RateLimiter
     {

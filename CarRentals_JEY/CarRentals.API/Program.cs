@@ -1,6 +1,7 @@
 using CarRentals.API.Data;
+using CarRentals.API.Interface;
+using CarRentals.API.Middleware;
 using CarRentals.API.Models;
-using CarRentals.API.RateLimiting;
 using CarRentals.API.Security;
 using CarRentals.API.Services;
 using Microsoft.EntityFrameworkCore;
@@ -12,7 +13,7 @@ builder.Services.AddDbContext<CarRentalContext>(options =>
     options.UseInMemoryDatabase("CarRentalDb"));
 
 // Add services to the container.
-
+builder.Services.AddMemoryCache();
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
@@ -20,9 +21,10 @@ builder.Services.AddSwaggerGen();
 
 // Adding custom services
 builder.Services.AddSingleton(new ApiKeyValidator("secret-key-123")); // you can move to config
-builder.Services.AddSingleton(new RateLimiter(10, TimeSpan.FromSeconds(10)));
-builder.Services.AddScoped<ReservationService>();
-
+builder.Services.AddScoped<IReservationService, ReservationService>();
+builder.Services.AddScoped<IInventoryService, InventoryService>();
+builder.Services.AddSingleton<RateLimiter>(_ =>
+    new RateLimiter(5, TimeSpan.FromMinutes(1)));
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowLocalAngular", policy =>
@@ -34,6 +36,7 @@ builder.Services.AddCors(options =>
 });
 
 var app = builder.Build();
+
 
 // seed inventory
 using (var scope = app.Services.CreateScope())
@@ -62,6 +65,8 @@ app.UseHttpsRedirection();
 app.UseCors("AllowLocalAngular");
 
 app.UseAuthorization();
+
+app.UseReservationRateLimiting();
 
 app.MapControllers();
 
