@@ -8,7 +8,7 @@ import { NgForm, FormsModule } from '@angular/forms';
   standalone: true,
   templateUrl: './app.html',
   styleUrl: './app.css',
-  imports: [CommonModule, JsonPipe, FormsModule]
+  imports: [CommonModule, FormsModule]
 })
 
 export class AppComponent {
@@ -25,7 +25,6 @@ export class AppComponent {
   start = '';
   end = '';
   apiKey = 'secret-key-123';
-
   ngOnInit(){
    this.loadbtn.nativeElement.click();
   }

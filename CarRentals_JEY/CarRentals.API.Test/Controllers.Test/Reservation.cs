@@ -1,60 +1,83 @@
-﻿using CarRentals.API.Controllers;
+﻿using System;
+using System.Threading.Tasks;
+using CarRentals.API.Controllers;
+using CarRentals.API.Data;
 using CarRentals.API.Models;
-using CarRentals.API.RateLimiting;
 using CarRentals.API.Security;
 using CarRentals.API.Services;
-using CarRentals.API.Test.Test_Helpers;
 using Microsoft.AspNetCore.Mvc;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Logging;
+using Xunit;
 
-namespace CarRentals.API.Test.Controllers.Test
+namespace CarRentals.API.Test.Controllers
 {
-    public class Reservation
+    public class ReservationTests
     {
+        private CarRentalContext GetContext(string dbName)
+        {
+            var opts = new DbContextOptionsBuilder<CarRentalContext>()
+                .UseInMemoryDatabase(dbName)
+                .Options;
+
+            return new CarRentalContext(opts);
+        }
+
+        private ReservationService GetService(CarRentalContext ctx)
+        {
+            var cache = new MemoryCache(new MemoryCacheOptions());
+            var apiKeyValidator = new ApiKeyValidator((new[] { "secret-key-123" }).ToString());
+            var logger = LoggerFactory.Create(b => b.AddDebug())
+                                      .CreateLogger<ReservationService>();
+
+            // 👇 this matches your current ReservationService constructor
+            return new ReservationService(
+                ctx,
+                cache,
+                apiKeyValidator,
+                logger);
+        }
+
         [Fact]
         public async Task Post_should_return_bad_request_on_overlap()
         {
-            var ctx = DbHelper.GetInMemoryContext("ctrl_overlap");
+            // arrange
+            var ctx = GetContext("ctrl_overlap");
+            // capacity 1 for carType = 1
             ctx.CarInventories.Add(new CarInventoryEntity
             {
-                CarType = CarType.Sedan,
+                CarType = (CarType)1,
                 Capacity = 1
             });
-            ctx.SaveChanges();
+            await ctx.SaveChangesAsync();
 
-            var svc = new ReservationService(
-                ctx,
-                new ApiKeyValidator("secret-key-123"),
-                new RateLimitingMiddleware(10, TimeSpan.FromSeconds(10)));
-
+            var svc = GetService(ctx);
             var controller = new ReservationsController(svc);
 
             var start = DateTime.Today.AddHours(9);
 
-            // first ok
+            // first one should succeed
             await controller.CreateReservation(new ReservationRequest
             {
                 ApiKey = "secret-key-123",
                 CustomerId = "a",
-                CarType = CarType.Sedan,
+                CarType = (CarType)1,
                 Start = start,
-                Days = 1
+                End = start.AddHours(4)
             });
 
-            // second overlaps → should be BadRequest
+            // act – second overlaps, should be BadRequest
             var result2 = await controller.CreateReservation(new ReservationRequest
             {
                 ApiKey = "secret-key-123",
                 CustomerId = "b",
-                CarType = CarType.Sedan,
-                Start = start.AddHours(2),
-                Days = 1
+                CarType = (CarType)1,
+                Start = start.AddHours(2),     // overlaps
+                End = start.AddHours(6)
             });
 
+            // assert
             Assert.IsType<BadRequestObjectResult>(result2);
         }
     }
